@@ -215,7 +215,7 @@ func flipImage(imageData []byte) ([]byte, error) {
 	flipped := image.NewRGBA(bounds)
 	for x := bounds.Min.X; x < bounds.Max.X; x++ {
 		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-			flipped.Set(x, bounds.Max.Y-y-1, img.At(x, y))
+			flipped.Set(bounds.Max.X-x-1, bounds.Max.Y-y-1, img.At(x, y))
 		}
 	}
 
