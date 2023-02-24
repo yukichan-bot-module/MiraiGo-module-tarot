@@ -3,6 +3,8 @@ package tarot
 import (
 	"bytes"
 	"embed"
+	"image"
+	"image/png"
 	"io"
 	"io/fs"
 	"math/rand"
@@ -144,6 +146,16 @@ func drawCard(c *client.QQClient, groupCode int64, number int) *message.SendingM
 			logger.WithError(err).Error("Fail to read img.")
 			replyMsg.Append(message.NewText("[ERROR] 读取图片失败\n"))
 		}
+		// 翻转图片，实现正逆位
+		if (rand.Int() % 2) == 0 {
+			flippedImageData, err := flipImage(imgData)
+			if err != nil {
+				logger.WithError(err).Error("Fail to flip image")
+				continue
+			} else {
+				imgData = flippedImageData
+			}
+		}
 		// 上传图片
 		imgEle, err := uploadImage(c, groupCode, bytes.NewReader(imgData))
 		if err != nil {
@@ -188,4 +200,33 @@ func uploadImage(c *client.QQClient, groupCode int64, img io.ReadSeeker) (*messa
 		return nil, err
 	}
 	return ele, nil
+}
+
+func flipImage(imageData []byte) ([]byte, error) {
+	// Decode the []byte into an image.Image.
+	img, _, err := image.Decode(bytes.NewReader(imageData))
+	if err != nil {
+		logger.WithError(err).Error("Fail to decode image")
+		return nil, err
+	}
+
+	// Flip the image vertically.
+	bounds := img.Bounds()
+	flipped := image.NewRGBA(bounds)
+	for x := bounds.Min.X; x < bounds.Max.X; x++ {
+		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+			flipped.Set(x, bounds.Max.Y-y-1, img.At(x, y))
+		}
+	}
+
+	// Encode the flipped image as a []byte.
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, flipped); err != nil {
+		logger.WithError(err).Error("Fail to encode flipped image")
+		return nil, err
+	}
+
+	// Return the flipped []byte image.
+	flippedData := buf.Bytes()
+	return flippedData, nil
 }
