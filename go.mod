@@ -1,6 +1,6 @@
 module github.com/yukichan-bot-module/MiraiGo-module-tarot
 
-go 1.19
+go 1.20
 
 require (
 	github.com/Logiase/MiraiGo-Template v0.0.0-20220412065005-27063e73adf8

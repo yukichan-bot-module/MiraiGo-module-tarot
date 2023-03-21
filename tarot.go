@@ -188,12 +188,19 @@ func simpleText(text string) *message.SendingMessage {
 	return message.NewSendingMessage().Append(message.NewText(text))
 }
 
-func uploadImage(c *client.QQClient, groupCode int64, img io.ReadSeeker) (*message.GroupImageElement, error) {
+// uploadImage 上传图片
+func uploadImage(c *client.QQClient, groupCode int64, img io.ReadSeeker) (message.IMessageElement, error) {
 	// 尝试上传图片
-	ele, err := c.UploadGroupImage(groupCode, img)
+	ele, err := c.UploadImage(message.Source{
+		SourceType: message.SourceGroup,
+		PrimaryID:  groupCode,
+	}, img)
 	// 发生错误时重试 3 次，否则报错
 	for i := 0; i < 3 && err != nil; i++ {
-		ele, err = c.UploadGroupImage(groupCode, img)
+		ele, err = c.UploadImage(message.Source{
+			SourceType: message.SourceGroup,
+			PrimaryID:  groupCode,
+		}, img)
 	}
 	if err != nil {
 		logger.WithError(err).Error("Unable to upload image.")
